@@ -1,0 +1,11 @@
+Release/
+Debug/
+.ino.cpp
+*.d
+*.bak
+*.tmp
+*.stl
+.settings/
+Debug_AVaRICE/
+.metadata/
+**/.idea/workspace.xml
