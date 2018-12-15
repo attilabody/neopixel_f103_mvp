@@ -99,42 +99,100 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  asm volatile(
+	"	movs r3, #1000	\n\t"
+	"1:	subs r3, #1		\n\t"
+	"	bne 1b			\n\t"
+	: : : "r3", "cc"
+  );
+
+  asm volatile("\tmovs r3, #1000\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc");
+
   GPIOB->ODR = 0;
   volatile uint32_t	v;
-  uint8_t ledbytes[] = {0x0f, 0xf0, 0};
+  uint8_t ledbytes[] = {0, 0xff, 0, 0xff, 0x55, 0xaa};
 
   __disable_irq();
 
+#define W_1f 5
+#define W_0f 0
+#define W_0s 3
+
+#define W_1af
+#define W_1as ++v; ++v
+#define W_0af ++v; ++v
+#define W_0as ++v; ++v
+/*
+#define SHIFTBIT(x) \
+	if(b&(1<<x)) { \
+		GPIOB->BSRR = (1 << 11);	\
+		for( v=W_1f; v != 0; --v); \
+		W_1af; \
+		GPIOB->BSRR = (1 << (16+11));	\
+		W_1as; \
+	} else { \
+		GPIOB->BSRR = (1 << 11); \
+		for( v=W_0f; v != 0; --v); \
+		W_0af; \
+		GPIOB->BSRR = (1 << (16+11)); \
+		for( v=W_0s; v != 0; --v); \
+		W_0as; \
+	}
+*/
+#define SHIFTBIT(x) \
+	if(b&(1<<x)) { \
+		GPIOB->BSRR = (1 << 11);	\
+		asm volatile("\tmov r3, #10\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
+		GPIOB->BSRR = (1 << (16+11));	\
+		asm volatile("\tmov r3, #03\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
+	} else { \
+		GPIOB->BSRR = (1 << 11); \
+		asm volatile("\tmov r3, #03\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
+		GPIOB->BSRR = (1 << (16+11)); \
+		asm volatile("\tmov r3, #10\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
+	}
+
+__disable_irq();
+
   while(1)
   {
-	uint32_t	*bitPtr = BITBAND_RAM(ledbytes, 0);
-	uint32_t	cnt = sizeof(ledbytes)*8 + 1;
+	uint8_t	*bufPtr = ledbytes;
+	uint32_t	cnt = sizeof(ledbytes) + 1;
 
 	while(--cnt) {
+		uint32_t b = *bufPtr++;
+		SHIFTBIT(7);
+		SHIFTBIT(6);
+		SHIFTBIT(5);
+		SHIFTBIT(4);
+		SHIFTBIT(3);
+		SHIFTBIT(2);
+		SHIFTBIT(1);
 
-		if(*bitPtr++) {
-			GPIOB->BSRR = 1 << 11;		//set
-			for( v=5; v != 0; --v);		//long
-			GPIOB->BSRR = 1 << (16+11);	//clear
-			++v; ++v;					//short
+		if(b&1) {
+			GPIOB->BSRR = 1 << 11;
+			for( v=W_1f; v != 0; --v);
+			W_1af;
+			GPIOB->BSRR = 1 << (16+11);
+			W_1as;
 		} else {
-			GPIOB->BSRR = 1 << 11;		//set
-			for( v=0; v != 0; --v);		//short
-			++v;++v;
-			GPIOB->BSRR = 1 << (16+11);	//clear
-			for( v=3; v != 0; --v);		//long
-			++v; ++v;
+			GPIOB->BSRR = 1 << 11;
+			for( v=W_0f; v != 0; --v);
+			W_0af;
+			GPIOB->BSRR = 1 << (16+11);
+			for( v=W_0s; v != 0; --v);
+			++v; v=0;
 		}
 	}
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	for( v=400; v != 0; --v);		//long
+	for( v=100; v != 0; --v);		//long
   }
   /* USER CODE END 3 */
-}
 
+}
 static void LL_Init(void)
 {
   
