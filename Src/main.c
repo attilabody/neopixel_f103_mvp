@@ -38,6 +38,9 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32f1xx_hal.h"
+#include "dma.h"
+#include "spi.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -48,11 +51,12 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+volatile uint8_t g_done = 0;
+uint8_t g_ledBytes[] = {0, 0xff, 0, 0xff, 0x55, 0xaa};
+uint8_t g_ledBits[sizeof(g_ledBytes) * 8 / 2 + 1];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-static void LL_Init(void);
 void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
@@ -61,6 +65,19 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void convert(uint8_t *src, uint8_t *dst, uint16_t size)
+{
+	static uint8_t const bits[4] = { 0b10001000, 0b10001110, 0b11101000, 0b11101110 };
+
+	while(size--) {
+		uint8_t byte=*src++;
+		uint8_t duo = 3;
+		do {
+			uint8_t mask = 3 << (duo<<1);
+			*dst++ = bits[(byte & (mask))>>(duo<<1)];
+		} while(duo--);
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -78,7 +95,7 @@ int main(void)
   /* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  LL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -93,134 +110,28 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-
+  convert(g_ledBytes, g_ledBits, sizeof(g_ledBytes));
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  asm volatile(
-	"	movs r3, #1000	\n\t"
-	"1:	subs r3, #1		\n\t"
-	"	bne 1b			\n\t"
-	: : : "r3", "cc"
-  );
-
-  asm volatile("\tmovs r3, #1000\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc");
-
-  GPIOB->ODR = 0;
-  volatile uint32_t	v;
-  uint8_t ledbytes[] = {0, 0xff, 0, 0xff, 0x55, 0xaa};
-
-  __disable_irq();
-
-#define W_1f 5
-#define W_0f 0
-#define W_0s 3
-
-#define W_1af
-#define W_1as ++v; ++v
-#define W_0af ++v; ++v
-#define W_0as ++v; ++v
-/*
-#define SHIFTBIT(x) \
-	if(b&(1<<x)) { \
-		GPIOB->BSRR = (1 << 11);	\
-		for( v=W_1f; v != 0; --v); \
-		W_1af; \
-		GPIOB->BSRR = (1 << (16+11));	\
-		W_1as; \
-	} else { \
-		GPIOB->BSRR = (1 << 11); \
-		for( v=W_0f; v != 0; --v); \
-		W_0af; \
-		GPIOB->BSRR = (1 << (16+11)); \
-		for( v=W_0s; v != 0; --v); \
-		W_0as; \
-	}
-*/
-#define SHIFTBIT(x) \
-	if(b&(1<<x)) { \
-		GPIOB->BSRR = (1 << 11);	\
-		asm volatile("\tmov r3, #10\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
-		GPIOB->BSRR = (1 << (16+11));	\
-		asm volatile("\tmov r3, #03\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
-	} else { \
-		GPIOB->BSRR = (1 << 11); \
-		asm volatile("\tmov r3, #03\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
-		GPIOB->BSRR = (1 << (16+11)); \
-		asm volatile("\tmov r3, #10\n1:\tsubs r3, #1\n\tbne 1b\n\t" : : : "r3", "cc"); \
-	}
-
-__disable_irq();
 
   while(1)
   {
-	uint8_t	*bufPtr = ledbytes;
-	uint32_t	cnt = sizeof(ledbytes) + 1;
-
-	while(--cnt) {
-		uint32_t b = *bufPtr++;
-		SHIFTBIT(7);
-		SHIFTBIT(6);
-		SHIFTBIT(5);
-		SHIFTBIT(4);
-		SHIFTBIT(3);
-		SHIFTBIT(2);
-		SHIFTBIT(1);
-
-		if(b&1) {
-			GPIOB->BSRR = 1 << 11;
-			for( v=W_1f; v != 0; --v);
-			W_1af;
-			GPIOB->BSRR = 1 << (16+11);
-			W_1as;
-		} else {
-			GPIOB->BSRR = 1 << 11;
-			for( v=W_0f; v != 0; --v);
-			W_0af;
-			GPIOB->BSRR = 1 << (16+11);
-			for( v=W_0s; v != 0; --v);
-			++v; v=0;
-		}
-	}
+	  HAL_StatusTypeDef st;
+	  g_ledBits[sizeof(g_ledBits)-1] = 0;
+	  st = HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+	  while(!g_done);
+	  HAL_Delay(1);
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	for( v=100; v != 0; --v);		//long
   }
   /* USER CODE END 3 */
-
-}
-static void LL_Init(void)
-{
-  
-
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-
-  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-
-  /* System interrupt init*/
-  /* MemoryManagement_IRQn interrupt configuration */
-  NVIC_SetPriority(MemoryManagement_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* BusFault_IRQn interrupt configuration */
-  NVIC_SetPriority(BusFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* UsageFault_IRQn interrupt configuration */
-  NVIC_SetPriority(UsageFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* SVCall_IRQn interrupt configuration */
-  NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* DebugMonitor_IRQn interrupt configuration */
-  NVIC_SetPriority(DebugMonitor_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* PendSV_IRQn interrupt configuration */
-  NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-  /* SysTick_IRQn interrupt configuration */
-  NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
-
-    /**NOJTAG: JTAG-DP Disabled and SW-DP Enabled 
-    */
-  LL_GPIO_AF_Remap_SWJ_NOJTAG();
 
 }
 
@@ -231,49 +142,47 @@ static void LL_Init(void)
 void SystemClock_Config(void)
 {
 
-  LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-   if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_2)
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL13;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();  
+    _Error_Handler(__FILE__, __LINE__);
   }
-  LL_RCC_HSE_Enable();
 
-   /* Wait till HSE is ready */
-  while(LL_RCC_HSE_IsReady() != 1)
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
-    
+    _Error_Handler(__FILE__, __LINE__);
   }
-  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE_DIV_1, LL_RCC_PLL_MUL_9);
 
-  LL_RCC_PLL_Enable();
+    /**Configure the Systick interrupt time 
+    */
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-   /* Wait till PLL is ready */
-  while(LL_RCC_PLL_IsReady() != 1)
-  {
-    
-  }
-  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-
-  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
-
-  LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
-
-  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-
-   /* Wait till System clock is ready */
-  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
-  {
-  
-  }
-  LL_Init1msTick(72000000);
-
-  LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
-
-  LL_SetSystemCoreClock(72000000);
+    /**Configure the Systick 
+    */
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
   /* SysTick_IRQn interrupt configuration */
-  NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 /* USER CODE BEGIN 4 */

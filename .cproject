@@ -24,7 +24,7 @@
 							<option id="fr.ac6.managedbuild.option.gnu.cross.fpu.1119905752" name="Floating point hardware" superClass="fr.ac6.managedbuild.option.gnu.cross.fpu" value="fr.ac6.managedbuild.option.gnu.cross.fpu.no" valueType="enumerated" />
 							<option id="fr.ac6.managedbuild.option.gnu.cross.floatabi.1951111972" name="Floating-point ABI" superClass="fr.ac6.managedbuild.option.gnu.cross.floatabi" value="fr.ac6.managedbuild.option.gnu.cross.floatabi.soft" valueType="enumerated" />
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="fr.ac6.managedbuild.targetPlatform.gnu.cross.1151237480" isAbstract="false" osList="all" superClass="fr.ac6.managedbuild.targetPlatform.gnu.cross" />
-							<builder buildPath="${workspace_loc:/NeoPixelF103MVP}/Debug" id="fr.ac6.managedbuild.builder.gnu.cross.890651759" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="fr.ac6.managedbuild.builder.gnu.cross">
+							<builder buildPath="${workspace_loc:/NeoPixelF103MVP}/Debug" id="fr.ac6.managedbuild.builder.gnu.cross.890651759" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="fr.ac6.managedbuild.builder.gnu.cross">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug" />
 								</outputEntries>
@@ -37,21 +37,14 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F1xx/Include" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include" />
+									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy" />
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1257536459" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" />
-									
-									
-									
-									
-									
-									
-									
-									
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
 									<listOptionValue builtIn="false" value="STM32F103xB" />
-								<listOptionValue builtIn="false" value="HSE_VALUE=8000000" /><listOptionValue builtIn="false" value="HSE_STARTUP_TIMEOUT=100" /><listOptionValue builtIn="false" value="LSE_STARTUP_TIMEOUT=5000" /><listOptionValue builtIn="false" value="LSE_VALUE=32768" /><listOptionValue builtIn="false" value="HSI_VALUE=8000000" /><listOptionValue builtIn="false" value="LSI_VALUE=40000" /><listOptionValue builtIn="false" value="VDD_VALUE=3300" /><listOptionValue builtIn="false" value="PREFETCH_ENABLE=1" /></option>
+									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other.739745364" superClass="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.62084941" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s.1618358280" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s" />
@@ -64,21 +57,14 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F1xx/Include" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include" />
+									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy" />
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1921587770" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" />
-									
-									
-									
-									
-									
-									
-									
-									
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
 									<listOptionValue builtIn="false" value="STM32F103xB" />
-								<listOptionValue builtIn="false" value="HSE_VALUE=8000000" /><listOptionValue builtIn="false" value="HSE_STARTUP_TIMEOUT=100" /><listOptionValue builtIn="false" value="LSE_STARTUP_TIMEOUT=5000" /><listOptionValue builtIn="false" value="LSE_VALUE=32768" /><listOptionValue builtIn="false" value="HSI_VALUE=8000000" /><listOptionValue builtIn="false" value="LSI_VALUE=40000" /><listOptionValue builtIn="false" value="VDD_VALUE=3300" /><listOptionValue builtIn="false" value="PREFETCH_ENABLE=1" /></option>
+									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.652027465" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp.1264884591" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s.1687591499" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s" />
@@ -144,7 +130,7 @@
 							<option id="fr.ac6.managedbuild.option.gnu.cross.fpu.1119905752" name="Floating point hardware" superClass="fr.ac6.managedbuild.option.gnu.cross.fpu" value="fr.ac6.managedbuild.option.gnu.cross.fpu.no" valueType="enumerated" />
 							<option id="fr.ac6.managedbuild.option.gnu.cross.floatabi.1951111972" name="Floating-point ABI" superClass="fr.ac6.managedbuild.option.gnu.cross.floatabi" value="fr.ac6.managedbuild.option.gnu.cross.floatabi.soft" valueType="enumerated" />
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="fr.ac6.managedbuild.targetPlatform.gnu.cross.1151237480" isAbstract="false" osList="all" superClass="fr.ac6.managedbuild.targetPlatform.gnu.cross" />
-							<builder buildPath="${workspace_loc:/NeoPixelF103MVP}/Release" id="fr.ac6.managedbuild.builder.gnu.cross.890651759" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="fr.ac6.managedbuild.builder.gnu.cross">
+							<builder buildPath="${workspace_loc:/NeoPixelF103MVP}/Release" id="fr.ac6.managedbuild.builder.gnu.cross.890651759" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="fr.ac6.managedbuild.builder.gnu.cross">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release" />
 								</outputEntries>
@@ -157,21 +143,14 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F1xx/Include" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include" />
+									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy" />
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1257536459" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" />
-									
-									
-									
-									
-									
-									
-									
-									
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
 									<listOptionValue builtIn="false" value="STM32F103xB" />
-								<listOptionValue builtIn="false" value="HSE_VALUE=8000000" /><listOptionValue builtIn="false" value="HSE_STARTUP_TIMEOUT=100" /><listOptionValue builtIn="false" value="LSE_STARTUP_TIMEOUT=5000" /><listOptionValue builtIn="false" value="LSE_VALUE=32768" /><listOptionValue builtIn="false" value="HSI_VALUE=8000000" /><listOptionValue builtIn="false" value="LSI_VALUE=40000" /><listOptionValue builtIn="false" value="VDD_VALUE=3300" /><listOptionValue builtIn="false" value="PREFETCH_ENABLE=1" /></option>
+									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other.739745364" superClass="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.62084941" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s.1618358280" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s" />
@@ -184,21 +163,14 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F1xx/Include" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include" />
+									<listOptionValue builtIn="false" value="../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy" />
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.symbols.2073291198" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER" />
-									
-									
-									
-									
-									
-									
-									
-									
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;" />
 									<listOptionValue builtIn="false" value="__packed=&quot;__attribute__((__packed__))&quot;" />
 									<listOptionValue builtIn="false" value="STM32F103xB" />
-								<listOptionValue builtIn="false" value="HSE_VALUE=8000000" /><listOptionValue builtIn="false" value="HSE_STARTUP_TIMEOUT=100" /><listOptionValue builtIn="false" value="LSE_STARTUP_TIMEOUT=5000" /><listOptionValue builtIn="false" value="LSE_VALUE=32768" /><listOptionValue builtIn="false" value="HSI_VALUE=8000000" /><listOptionValue builtIn="false" value="LSI_VALUE=40000" /><listOptionValue builtIn="false" value="VDD_VALUE=3300" /><listOptionValue builtIn="false" value="PREFETCH_ENABLE=1" /></option>
+									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
+								</option>
 								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.652027465" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp.1264884591" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s.1687591499" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s" />
@@ -253,9 +225,10 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders" />
 	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration artifactName="${ProjName}" configurationName="Debug">
+		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="NeoPixelF103MVP" />
 		</configuration>
+		<configuration configurationName="Release" />
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets" />
 </cproject>
