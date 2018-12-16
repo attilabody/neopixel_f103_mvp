@@ -26,9 +26,9 @@ bool Sparkle::Step()
 	Pixel_t current = *m_target;
 	uint8_t remaining = 3;
 
-	if(current.b > m_fadeSpeed.r )current.r -= m_fadeSpeed.r;
+	if(current.r > m_fadeSpeed.r )current.r -= m_fadeSpeed.r;
 	else {
-		current.b = 0;
+		current.r = 0;
 		--remaining;
 	}
 
@@ -43,7 +43,10 @@ bool Sparkle::Step()
 		current.b = 0;
 		--remaining;
 	}
+	*m_target = current;
 
-	return remaining != 0;
+	if(remaining) return true;
+	m_target = nullptr;
+	return false;
 
 }
