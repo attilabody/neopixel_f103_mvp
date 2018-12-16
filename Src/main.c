@@ -45,21 +45,18 @@
 
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include "App/Pixel.h"
+#include "App/LedBuffers.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-#define NUMPIXELS 144
 volatile uint8_t g_done = 0;
-typedef struct {
-	uint8_t g;
-	uint8_t r;
-	uint8_t b;
-} pixel_t;
-pixel_t g_pixels[NUMPIXELS];
-uint8_t g_ledBits[sizeof(g_pixels) * 8 / 2 + 1];
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,23 +64,10 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void App();
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void convert(uint8_t *src, uint8_t *dst, uint16_t size)
-{
-	static uint8_t const bits[4] = { 0b10001000, 0b10001110, 0b11101000, 0b11101110 };
-
-	while(size--) {
-		uint8_t byte=*src++;
-		uint8_t duo = 3;
-		do {
-			uint8_t mask = 3 << (duo<<1);
-			*dst++ = bits[(byte & (mask))>>(duo<<1)];
-		} while(duo--);
-	}
-}
 
 /* USER CODE END 0 */
 
@@ -124,45 +108,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-#define BRIGHTNESS 2
-#define DELAY 10
-
-	g_ledBits[sizeof(g_ledBits)-1] = 0;
-	memset(g_pixels, 0, sizeof(g_pixels));
-
-	while(1)
-	{
-		for(uint16_t idx=0; idx < NUMPIXELS; idx++)
-		{
-			if(idx % 3 == 0) g_pixels[idx].r = BRIGHTNESS;
-			else if(idx % 3 == 1) g_pixels[idx].g = BRIGHTNESS;
-			else g_pixels[idx].b = BRIGHTNESS;
-
-			convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
-
-			HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-			while(!g_done);
-			HAL_Delay(DELAY);
-		}
-
-		for(uint16_t idx=0; idx < NUMPIXELS; idx++)
-		{
-			if(idx % 3 == 0) g_pixels[idx].r = 0;
-			else if(idx % 3 == 1) g_pixels[idx].g = 0;
-			else g_pixels[idx].b = 0;
-
-			convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
-
-			HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-			while(!g_done);
-			HAL_Delay(DELAY);
-		}
-
+  while(1) {
+	  App();
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	}
+  }
   /* USER CODE END 3 */
 
 }

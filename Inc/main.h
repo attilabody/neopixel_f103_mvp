@@ -58,8 +58,15 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
+#ifdef __cplusplus
+ extern "C" {
+#endif
 extern volatile uint8_t g_done;
-/* USER CODE END Private defines */
+#ifdef __cplusplus
+}
+#endif
+
+ /* USER CODE END Private defines */
 
 #ifdef __cplusplus
  extern "C" {
