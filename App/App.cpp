@@ -12,9 +12,13 @@
 #include "gpio.h"
 
 #include <string.h>
+#include <stdlib.h>
 #include "Pixel.h"
 #include "LedBuffers.h"
 #include "Sparkle.h"
+
+#define NUMSPARKLES 10
+Sparkle	g_s[NUMSPARKLES];
 
 void convert(uint8_t *src, uint8_t *dst, uint16_t size)
 {
@@ -30,6 +34,31 @@ void convert(uint8_t *src, uint8_t *dst, uint16_t size)
 	}
 }
 
+inline uint16_t rr(uint16_t top)
+{
+	return rand() % top;
+}
+
+uint16_t ChoosePixel()
+{
+	volatile uint16_t chosen;
+	uint16_t spi;
+
+	do {
+		chosen = rr(NUMPIXELS);
+		for(spi=0; spi<NUMSPARKLES; ++spi) {
+			if(static_cast<Pixel_t*>(g_s[spi]) && static_cast<Pixel_t*>(g_s[spi]) == &g_pixels[chosen])
+				break;
+		}
+	} while(spi < NUMSPARKLES);
+	return chosen;
+}
+
+void StartSparkle( Sparkle &s )
+{
+	s.Start(g_pixels+ChoosePixel(), Pixel(255,255,255), Pixel(rr(5)+1,rr(5)+1,rr(5)+1));
+}
+
 extern "C" void App()
 {
 	g_ledBits[sizeof(g_ledBits)-1] = 0;
@@ -38,25 +67,16 @@ extern "C" void App()
 
 	while(1)
 	{
-		Sparkle	s;
-		Pixel_t color = {0xff, 0xff, 0xff};
-		Pixel_t fadeSpeed = {1,2,3};
-
-		for(uint16_t idx=0; idx < NUMPIXELS; idx++)
-		{
-			s.Start(&g_pixels[idx], color, fadeSpeed);
-			convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
-			HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-			while(!g_done);
-			HAL_Delay(1);
-
-			do {
-				s.Step();
-				convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
-				HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-				while(!g_done);
-				HAL_Delay(1);
-			} while( static_cast<Pixel_t*>( s ));
+		for(int16_t spi = 0; spi < NUMSPARKLES; ++spi) {
+			if(static_cast<Pixel_t*>(g_s[spi]))
+				g_s[spi].Step();
+			else
+				StartSparkle(g_s[spi]);
 		}
+
+		convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+		HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+		while(!g_done);
+		HAL_Delay(5);
 	}
 }

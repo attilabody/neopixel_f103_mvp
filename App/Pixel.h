@@ -24,4 +24,14 @@ typedef struct {
 }
 #endif
 
+#ifdef __cplusplus
+struct Pixel : public Pixel_t {
+	Pixel(uint8_t _r, uint8_t _g, uint8_t _b) {
+		g =_g;
+		r = _r;
+		b = _b;
+	}
+};
+#endif
+
 #endif /* PIXEL_H_ */
