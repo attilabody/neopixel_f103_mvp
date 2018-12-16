@@ -44,16 +44,22 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "bitband.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+#define NUMPIXELS 144
 volatile uint8_t g_done = 0;
-uint8_t g_ledBytes[] = {0, 0xff, 0, 0xff, 0x55, 0xaa};
-uint8_t g_ledBits[sizeof(g_ledBytes) * 8 / 2 + 1];
+typedef struct {
+	uint8_t g;
+	uint8_t r;
+	uint8_t b;
+} pixel_t;
+pixel_t g_pixels[NUMPIXELS];
+uint8_t g_ledBits[sizeof(g_pixels) * 8 / 2 + 1];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,24 +119,50 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  convert(g_ledBytes, g_ledBits, sizeof(g_ledBytes));
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  while(1)
-  {
-	  HAL_StatusTypeDef st;
-	  g_ledBits[sizeof(g_ledBits)-1] = 0;
-	  st = HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-	  while(!g_done);
-	  HAL_Delay(1);
+#define BRIGHTNESS 2
+#define DELAY 10
+
+	g_ledBits[sizeof(g_ledBits)-1] = 0;
+	memset(g_pixels, 0, sizeof(g_pixels));
+
+	while(1)
+	{
+		for(uint16_t idx=0; idx < NUMPIXELS; idx++)
+		{
+			if(idx % 3 == 0) g_pixels[idx].r = BRIGHTNESS;
+			else if(idx % 3 == 1) g_pixels[idx].g = BRIGHTNESS;
+			else g_pixels[idx].b = BRIGHTNESS;
+
+			convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+
+			HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+			while(!g_done);
+			HAL_Delay(DELAY);
+		}
+
+		for(uint16_t idx=0; idx < NUMPIXELS; idx++)
+		{
+			if(idx % 3 == 0) g_pixels[idx].r = 0;
+			else if(idx % 3 == 1) g_pixels[idx].g = 0;
+			else g_pixels[idx].b = 0;
+
+			convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+
+			HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+			while(!g_done);
+			HAL_Delay(DELAY);
+		}
 
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 
 }
