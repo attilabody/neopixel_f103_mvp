@@ -56,30 +56,42 @@ uint16_t ChoosePixel()
 
 void StartSparkle( Sparkle &s )
 {
-	s.Start(g_pixels+ChoosePixel(), Pixel(255,255,255), Pixel(rr(5)+1,rr(5)+1,rr(5)+1));
+	s.Start(g_pixels+ChoosePixel(), Pixel(255,255,255), Pixel(rr(8)+3,rr(8)+3,rr(8)+3));
+}
+
+extern "C" void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	if(hspi == &hspi1) {
+		g_done = true;
+	}
 }
 
 extern "C" void App()
 {
 	g_ledBits[sizeof(g_ledBits)-1] = 0;
 	memset(g_pixels, 0, sizeof(g_pixels));
-
+	uint32_t	lastTick = HAL_GetTick() - FRAMETIME;
 
 	while(1)
 	{
+		while(HAL_GetTick() - lastTick < FRAMETIME );
+		lastTick += FRAMETIME;
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+
 		for(int16_t spi = 0; spi < NUMSPARKLES; ++spi) {
 			if(static_cast<Pixel_t*>(g_s[spi]))
 				g_s[spi].Step();
 			else
 				StartSparkle(g_s[spi]);
 		}
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
 		convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+
 		g_done = false;
-		GPIOC->BSRR = 1 << (13+16);
 		HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-		GPIOC->BSRR = 1 << 13;
 		while(!g_done);
-		HAL_Delay(5);
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	}
 }

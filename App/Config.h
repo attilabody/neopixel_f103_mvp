@@ -8,7 +8,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define NUMPIXELS 300
-#define NUMSPARKLES 25
-
+#define NUMPIXELS 144
+#define NUMSPARKLES (NUMPIXELS/12)
+#define FRAMETIME 20
 #endif /* CONFIG_H_ */
