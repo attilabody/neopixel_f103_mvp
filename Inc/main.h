@@ -66,7 +66,7 @@ extern volatile uint8_t g_done;
 }
 #endif
 
- /* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
  extern "C" {

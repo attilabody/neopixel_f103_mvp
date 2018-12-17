@@ -8,9 +8,9 @@
 #ifndef LEDBUFFERS_H_
 #define LEDBUFFERS_H_
 
+#include "Config.h"
 #include "Pixel.h"
 
-#define NUMPIXELS 144
 
 #ifdef __cplusplus
 extern "C" {

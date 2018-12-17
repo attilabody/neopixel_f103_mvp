@@ -13,11 +13,11 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "Config.h"
 #include "Pixel.h"
 #include "LedBuffers.h"
 #include "Sparkle.h"
 
-#define NUMSPARKLES 10
 Sparkle	g_s[NUMSPARKLES];
 
 void convert(uint8_t *src, uint8_t *dst, uint16_t size)
@@ -75,7 +75,10 @@ extern "C" void App()
 		}
 
 		convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+		g_done = false;
+		GPIOC->BSRR = 1 << (13+16);
 		HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+		GPIOC->BSRR = 1 << 13;
 		while(!g_done);
 		HAL_Delay(5);
 	}
