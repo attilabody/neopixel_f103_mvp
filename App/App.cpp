@@ -19,6 +19,7 @@
 #include "Sparkle.h"
 
 Sparkle	g_s[NUMSPARKLES];
+volatile uint8_t g_done = 0;
 
 void convert(uint8_t *src, uint8_t *dst, uint16_t size)
 {
@@ -26,11 +27,10 @@ void convert(uint8_t *src, uint8_t *dst, uint16_t size)
 
 	while(size--) {
 		uint8_t byte=*src++;
-		uint8_t duo = 3;
-		do {
-			uint8_t mask = 3 << (duo<<1);
-			*dst++ = bits[(byte & (mask))>>(duo<<1)];
-		} while(duo--);
+		for(int8_t shift = 6; shift >= 0; shift -= 2) {
+			uint8_t mask = 3 << shift;
+			*dst++ = bits[ (byte & mask) >> shift ];
+		}
 	}
 }
 
