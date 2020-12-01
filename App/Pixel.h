@@ -18,14 +18,14 @@ typedef struct {
 	uint8_t g;
 	uint8_t r;
 	uint8_t b;
-} Pixel_t;
+} pixel_t;
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef __cplusplus
-struct Pixel : public Pixel_t {
+struct Pixel : public pixel_t {
 	Pixel(uint8_t _r, uint8_t _g, uint8_t _b) {
 		g =_g;
 		r = _r;

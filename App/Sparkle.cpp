@@ -14,16 +14,22 @@ Sparkle::Sparkle()
 Sparkle::~Sparkle() {
 }
 
-void Sparkle::Start(Pixel_t *target, Pixel_t color, Pixel_t fadeSpeed)
+void Sparkle::Start(pixel_t *target, uint8_t delay, pixel_t color, pixel_t fadeSpeed)
 {
 	m_target = target;
 	*target = color;
+	m_delay = delay;
 	m_fadeSpeed = fadeSpeed;
 }
 
 bool Sparkle::Step()
 {
-	Pixel_t current = *m_target;
+	if(m_delay) {
+		--m_delay;
+		return true;
+	}
+
+	pixel_t current = *m_target;
 	uint8_t remaining = 3;
 
 	if(current.r > m_fadeSpeed.r )current.r -= m_fadeSpeed.r;
@@ -48,5 +54,4 @@ bool Sparkle::Step()
 	if(remaining) return true;
 	m_target = nullptr;
 	return false;
-
 }

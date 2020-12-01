@@ -6,8 +6,13 @@
  */
 #include "LedBuffers.h"
 
-Pixel_t g_pixels[NUMPIXELS];
-uint8_t g_spibuffer[sizeof(g_pixels) * 8 / 2 + 1];
+pixel_t g_pixels[NUMPIXELS] = {
+		{0xaa,0x55,0},
+		{0x55,0xaa,0xff},
+		{0xaa,0x55,0},
+		{0x55,0xaa,0xff},
+		{0xaa,0x55,0},
+		{0x55,0xaa,0xff},
+};
 
-
-
+uint8_t g_spibuffer[2][SPIBUFFER_SIZE];

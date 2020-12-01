@@ -21,8 +21,15 @@
 
 Sparkle	g_sparkles[NUMSPARKLES];
 volatile uint8_t g_spi_idle = 0;
+uint16_t g_pixels_transmitted;
+volatile uint8_t g_buffer_in_transmit;
+volatile bool g_need_refill;
+uint32_t g_refills = 0;
+uint16_t g_pixels_converted = 0;
 
-volatile uint32_t	g_tick = 0;
+volatile uint32_t g_tick = 0;
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 void convert(uint8_t *src, uint8_t *dst, uint16_t size)
 {
@@ -51,7 +58,7 @@ uint16_t ChoosePixel()
 	do {
 		chosen = rr(NUMPIXELS);
 		for(spi=0; spi<NUMSPARKLES; ++spi) {
-			if(static_cast<Pixel_t*>(g_sparkles[spi]) && static_cast<Pixel_t*>(g_sparkles[spi]) == &g_pixels[chosen])
+			if(static_cast<pixel_t*>(g_sparkles[spi]) && static_cast<pixel_t*>(g_sparkles[spi]) == &g_pixels[chosen])
 				break;
 		}
 	} while(spi < NUMSPARKLES);
@@ -63,7 +70,7 @@ uint16_t ChoosePixel()
 
 void StartSparkle( Sparkle &s )
 {
-	s.Start(g_pixels+ChoosePixel(), Pixel(255,255,255), Pixel(rr(8)+3,rr(8)+3,rr(8)+3));
+	s.Start(g_pixels+ChoosePixel(), rr(32), Pixel(255,255,255), Pixel(rr(8)+3,rr(8)+3,rr(8)+3));
 }
 
 extern "C" void HandleSystick()
@@ -78,54 +85,97 @@ extern "C" uint32_t GetTick()
 
 extern "C" void HandleSpiDmaIrq()
 {
-	if(LL_DMA_IsActiveFlag_TC3(DMA1)) {
+	static bool endframe;
+
+	if(LL_DMA_IsActiveFlag_TC3(DMA1))
+	{
 		LL_DMA_ClearFlag_TC3(DMA1);
-		g_spi_idle = true;
-		LL_SPI_DisableDMAReq_TX(SPI1);
 		LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
-	} else if(LL_DMA_IsActiveFlag_TE3(DMA1))
+
+		g_buffer_in_transmit ^= 1;
+		g_pixels_transmitted += SPIBUFFER_PIXELS;
+
+		if(g_pixels_transmitted < NUMPIXELS)
+		{
+			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)g_spibuffer[g_buffer_in_transmit]);
+			LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, SPIBUFFER_SIZE);
+			LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
+
+			if(g_pixels_converted < NUMPIXELS)
+			{
+				LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+				convert((uint8_t*)&g_pixels[g_pixels_converted],
+						g_spibuffer[g_buffer_in_transmit ^ 1],
+						MIN(SPIBUFFER_PIXELS, NUMPIXELS - g_pixels_converted)  * sizeof(pixel_t));
+				g_pixels_converted += MIN(SPIBUFFER_PIXELS, NUMPIXELS - g_pixels_converted);
+				LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+				endframe = false;
+			}
+			else
+			{
+				memset(g_spibuffer[g_buffer_in_transmit ^1], 0, sizeof(g_spibuffer[g_buffer_in_transmit ^1]));
+				endframe = true;
+			}
+
+		}
+		else if(endframe)
+		{
+			LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)g_spibuffer[g_buffer_in_transmit]);
+			LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, SPIBUFFER_SIZE);
+			LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
+			endframe = false;
+		}
+		else {
+			g_spi_idle = true;
+		}
+	}
+	else if(LL_DMA_IsActiveFlag_TE3(DMA1))
 		LL_DMA_ClearFlag_TE3(DMA1);
+
 }
 
 extern "C" void App()
 {
-	g_spibuffer[sizeof(g_spibuffer)-1] = 0;
+	uint32_t lastTick = GetTick();
 
 	for(uint16_t px = 0; px < NUMPIXELS; ++px)
-		g_pixels[px] = Pixel( DEFAULT_COLOR );
-
-	uint32_t lastTick = GetTick();
+		g_pixels[px] = Pixel(DEFAULT_COLOR);
 
 	LL_SYSTICK_EnableIT();
 	LL_SPI_Enable(SPI1);
+	LL_SPI_EnableDMAReq_TX(SPI1);
 
 	while(1)
 	{
 		while(GetTick() - lastTick < FRAMETIME );
 		lastTick += FRAMETIME;
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 
 		for(int16_t spi = 0; spi < NUMSPARKLES; ++spi) {
-			if(static_cast<Pixel_t*>(g_sparkles[spi]))
+			if(static_cast<pixel_t*>(g_sparkles[spi]))
 				g_sparkles[spi].Step();
 			else
 				StartSparkle(g_sparkles[spi]);
 		}
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 
-		convert((uint8_t*)g_pixels, g_spibuffer, sizeof(g_pixels));
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+		g_pixels_converted = 0;
+		g_pixels_transmitted = 0;
+		g_need_refill = true;
 
-		g_spi_idle = false;
-//		HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
-		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3, (uint32_t)g_spibuffer, LL_SPI_DMA_GetRegAddr(SPI1), LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
-		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, sizeof(g_spibuffer));
+		convert((uint8_t*)g_pixels, g_spibuffer[0], SPIBUFFER_PIXELS * sizeof(pixel_t));
+		g_pixels_converted += SPIBUFFER_PIXELS;
+		convert((uint8_t*)&g_pixels[g_pixels_converted], g_spibuffer[1], SPIBUFFER_PIXELS * sizeof(pixel_t));
+		g_pixels_converted += SPIBUFFER_PIXELS;
+
+		g_buffer_in_transmit = 0;
+
+		LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3, (uint32_t)g_spibuffer[0], LL_SPI_DMA_GetRegAddr(SPI1), LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
+		LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, SPIBUFFER_SIZE);
 		LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
-		LL_SPI_EnableDMAReq_TX(SPI1);
 		LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_3);
 		LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_3);
+		g_spi_idle = false;
 
 		while(!g_spi_idle);
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+
 	}
 }

@@ -14,13 +14,14 @@ class Sparkle {
 public:
 	Sparkle();
 	~Sparkle();
-	void Start(Pixel_t *target, Pixel_t color, Pixel_t fadeSpeed);
+	void Start(pixel_t *target, uint8_t delay, pixel_t color, pixel_t fadeSpeed);
 	bool Step();
-	operator Pixel_t*() { return m_target; }
+	operator pixel_t*() { return m_target; }
 
 private:
-	Pixel_t		*m_target = nullptr;
-	Pixel_t		m_fadeSpeed = {1, 1, 1};
+	pixel_t		*m_target = nullptr;
+	uint8_t		m_delay;
+	pixel_t		m_fadeSpeed = {1, 1, 1};
 };
 
 #endif /* SPARKLE_H_ */
