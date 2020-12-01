@@ -7,7 +7,7 @@
 #include "LedBuffers.h"
 
 Pixel_t g_pixels[NUMPIXELS];
-uint8_t g_ledBits[sizeof(g_pixels) * 8 / 2 + 1];
+uint8_t g_spibuffer[sizeof(g_pixels) * 8 / 2 + 1];
 
 
 

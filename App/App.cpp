@@ -41,6 +41,7 @@ inline uint16_t rr(uint16_t top)
 
 uint16_t ChoosePixel()
 {
+#ifndef DBG_CHOSEN_PIXEL
 	volatile uint16_t chosen;
 	uint16_t spi;
 
@@ -52,6 +53,9 @@ uint16_t ChoosePixel()
 		}
 	} while(spi < NUMSPARKLES);
 	return chosen;
+#else
+	return DBG_CHOSEN_PIXEL;
+#endif	//	DBG_CHOSEN_PIXEL
 }
 
 void StartSparkle( Sparkle &s )
@@ -68,9 +72,12 @@ extern "C" void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 
 extern "C" void App()
 {
-	g_ledBits[sizeof(g_ledBits)-1] = 0;
-	memset(g_pixels, 0, sizeof(g_pixels));
-	uint32_t	lastTick = HAL_GetTick() - FRAMETIME;
+	g_spibuffer[sizeof(g_spibuffer)-1] = 0;
+
+	for(uint16_t px = 0; px < NUMPIXELS; ++px)
+		g_pixels[px] = Pixel( DEFAULT_COLOR );
+
+	uint32_t lastTick = HAL_GetTick();
 
 	while(1)
 	{
@@ -86,11 +93,11 @@ extern "C" void App()
 		}
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
-		convert((uint8_t*)g_pixels, g_ledBits, sizeof(g_pixels));
+		convert((uint8_t*)g_pixels, g_spibuffer, sizeof(g_pixels));
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
 		g_done = false;
-		HAL_SPI_Transmit_DMA(&hspi1, g_ledBits, sizeof(g_ledBits));
+		HAL_SPI_Transmit_DMA(&hspi1, g_spibuffer, sizeof(g_spibuffer));
 		while(!g_done);
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	}
