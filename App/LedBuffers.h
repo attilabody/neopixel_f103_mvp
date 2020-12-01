@@ -13,7 +13,8 @@
 
 extern pixel_t g_pixels[NUMPIXELS];
 
-#define SPIBUFFER_SIZE (SPIBUFFER_PIXELS * sizeof(pixel_t) * 8 / 2)
+#define SPIBUFFER_PIXEL_SIZE ( sizeof(pixel_t) * 4) // each raw pixel bit represented by 4 bits in SPI transfer
+#define SPIBUFFER_SIZE (SPIBUFFER_PIXELS * SPIBUFFER_PIXEL_SIZE)
 
 extern uint8_t g_spibuffer[2][SPIBUFFER_SIZE];
 

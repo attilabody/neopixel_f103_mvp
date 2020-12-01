@@ -15,11 +15,11 @@
 #	define NUMSPARKLES (NUMPIXELS/12+1)
 #	define FRAMETIME 20
 #else
-#	define NUMPIXELS 6
+#	define NUMPIXELS 144
 #	define NUMSPARKLES 1
-#	define FRAMETIME 1
+#	define FRAMETIME 10
 #endif
 
-#define DEFAULT_COLOR 63,63,63
-#define SPIBUFFER_PIXELS 2
+#define DEFAULT_COLOR 15,15,15
+#define SPIBUFFER_PIXELS 4
 #endif /* CONFIG_H_ */
