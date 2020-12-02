@@ -26,8 +26,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
-#include "App/Pixel.h"
-#include "App/LedBuffers.h"
 
 /* USER CODE END Includes */
 
@@ -49,6 +47,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+volatile uint32_t g_tick = 0;
 
 /* USER CODE END PV */
 
@@ -61,6 +60,11 @@ void App();
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void DoNothing()
+{
+	static volatile uint32_t	cntr = 0;
+	++ cntr;
+}
 
 /* USER CODE END 0 */
 
@@ -106,12 +110,14 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
+  LL_SYSTICK_EnableIT();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while(1) {
-	  App();
+	App();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

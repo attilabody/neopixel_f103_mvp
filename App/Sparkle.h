@@ -8,7 +8,7 @@
 #ifndef SPARKLE_H_
 #define SPARKLE_H_
 #include <inttypes.h>
-#include "Pixel.h"
+#include "WS28xxStrip.h"
 
 class Sparkle {
 public:
