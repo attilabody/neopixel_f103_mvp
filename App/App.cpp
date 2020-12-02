@@ -30,14 +30,18 @@ volatile uint32_t g_tick = 0;
 
 void convert(uint8_t *src, uint8_t *dst, uint16_t src_size)
 {
-	static uint8_t const bits[4] = { 0b10001000, 0b10001110, 0b11101000, 0b11101110 };
+	static uint16_t const bits[16] = { // due to LE-ness the bit order is 1 0 3 2
+			0b1000100010001000, 0b1000111010001000, 0b1110100010001000, 0b1110111010001000,
+			0b1000100010001110, 0b1000111010001110, 0b1110100010001110, 0b1110111010001110,
+			0b1000100011101000, 0b1000111011101000, 0b1110100011101000, 0b1110111011101000,
+			0b1000100011101110, 0b1000111011101110, 0b1110100011101110, 0b1110111011101110
+	};
 
+	uint16_t *dstptr = (uint16_t*)dst;
 	while(src_size--) {
-		uint8_t byte=*src++;
-		for(int8_t shift = 6; shift >= 0; shift -= 2) {
-			uint8_t mask = 3 << shift;
-			*dst++ = bits[ (byte & mask) >> shift ];
-		}
+		uint8_t tmp =*src++;
+		*dstptr++ = bits[tmp >> 4];
+		*dstptr++ = bits[tmp & 0x0f];
 	}
 }
 
