@@ -5,7 +5,7 @@
 extern"C" {
 #endif
 
-void HandleSystick();
+void App();
 void HandleSpiDmaIrq();
 
 #ifdef __cplusplus

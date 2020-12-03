@@ -51,7 +51,6 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-extern volatile uint32_t g_tick;
 
 /* USER CODE END ET */
 
@@ -69,7 +68,6 @@ extern volatile uint32_t g_tick;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void DoNothing();
 
 /* USER CODE END EFP */
 

@@ -15,12 +15,21 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <cmsis_os2.h>
+#include <FreeRTOS.h>
+#include <timers.h>
+
 #include "Config.h"
 #include "WS28xxStrip.h"
 #include "Sparkle.h"
 
 WS28xxStrip<NUMPIXELS, SPIBUFFER_PIXELS>	g_strip( { DEFAULT_COLOR } );
 Sparkle	g_sparkles[NUMSPARKLES];
+
+/* Definitions for StripFeeder */
+#define STRIPFEEDER_STACK_SIZE 64
+StackType_t g_stripfeeder_stack[ STRIPFEEDER_STACK_SIZE ];
+StaticTask_t g_stripfeeder_control_block;
 
 inline uint16_t rr(uint16_t top)
 {
@@ -56,39 +65,46 @@ void StartSparkle( Sparkle &s )
 #endif
 }
 
-extern "C" uint32_t GetTick()
-{
-	return g_tick;
-}
-
 extern "C" void HandleSpiDmaIrq()
 {
 	g_strip.SpiDmaIsr();
 }
 
+void TimerCallback(TimerHandle_t th)
+{
+	LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
+
+	for(int16_t pixel = 0; pixel < NUMSPARKLES; ++pixel) {
+		if(static_cast<pixel_t*>(g_sparkles[pixel]))
+			g_sparkles[pixel].Step();
+		else
+			StartSparkle(g_sparkles[pixel]);
+	}
+	g_strip.Update();
+}
+
 extern "C" void App()
 {
-	uint32_t lastTick = GetTick();
+	TimerHandle_t th = nullptr;
+	StaticTimer_t tcb;
 
-	LL_SYSTICK_EnableIT();
+	xTaskCreateStatic(
+		WS28xxStrip<NUMPIXELS, SPIBUFFER_PIXELS>::RefillTaskEntry,
+		"RefillTask",
+		STRIPFEEDER_STACK_SIZE,
+		&g_strip,
+		osPriorityRealtime,
+		g_stripfeeder_stack,
+		&g_stripfeeder_control_block);
+
 	LL_SPI_Enable(SPI1);
 	LL_SPI_EnableDMAReq_TX(SPI1);
 
+	th = xTimerCreateStatic(nullptr, pdMS_TO_TICKS(20), pdTRUE, nullptr, TimerCallback, &tcb);
+	xTimerStart(th, 0);
+
 	while(1)
 	{
-		while(GetTick() - lastTick < FRAMETIME )
-			DoNothing();
-		lastTick += FRAMETIME;
-
-		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
-
-		for(int16_t spi = 0; spi < NUMSPARKLES; ++spi) {
-			if(static_cast<pixel_t*>(g_sparkles[spi]))
-				g_sparkles[spi].Step();
-			else
-				StartSparkle(g_sparkles[spi]);
-		}
-
-		g_strip.Update();
+		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
