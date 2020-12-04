@@ -61,7 +61,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Release/NeoPixelF103MVP.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="NeoPixelF103MVP"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.66754604"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/NeoPixelF103MVP"/>
 </listAttribute>

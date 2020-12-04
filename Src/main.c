@@ -110,8 +110,7 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
   /* Start scheduler */
   osKernelStart();
@@ -144,7 +143,7 @@ void SystemClock_Config(void)
   {
 
   }
-  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE_DIV_2, LL_RCC_PLL_MUL_13);
+  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE_DIV_1, LL_RCC_PLL_MUL_9);
   LL_RCC_PLL_Enable();
 
    /* Wait till PLL is ready */
@@ -162,8 +161,8 @@ void SystemClock_Config(void)
   {
 
   }
-  LL_Init1msTick(52000000);
-  LL_SetSystemCoreClock(52000000);
+  LL_Init1msTick(72000000);
+  LL_SetSystemCoreClock(72000000);
 }
 
 /* USER CODE BEGIN 4 */
