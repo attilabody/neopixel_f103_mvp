@@ -37,6 +37,8 @@ extern "C" {
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_pwr.h"
 #include "stm32f1xx_ll_spi.h"
+#include "stm32f1xx_ll_usart.h"
+#include "stm32f1xx.h"
 #include "stm32f1xx_ll_gpio.h"
 
 #if defined(USE_FULL_ASSERT)
