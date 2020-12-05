@@ -17,30 +17,34 @@
 #include <task.h>
 #include <semphr.h>
 
+#include <f1ll/dmahelper.h>
+
 struct pixel_t {
 	uint8_t g;
 	uint8_t r;
 	uint8_t b;
 };
 
-extern "C" void DMA1_Channel3_IRQHandler(void);
 
 template <uint16_t pixels, uint8_t spi_pixels> class WS28xxStrip {
 public:
-	WS28xxStrip(pixel_t defcolor);
+	WS28xxStrip(SPI_TypeDef *spi, DMA_TypeDef *dma, uint32_t channel, pixel_t defcolor);
 
 	pixel_t& operator[](int16_t index);
 
-	friend void DMA1_Channel3_IRQHandler(void);
 	void Update();
 
 	static void RefillTaskEntry(void *param) { reinterpret_cast<WS28xxStrip<pixels, spi_pixels>*>(param)->RefillTask(); }
 
+	void HandleSpiDmaIrq();
+
 private:
-	void SpiDmaIsr();
 	void RefillTask();
 	void Convert(uint8_t *src, uint8_t *dst, uint16_t src_size);
 	template<typename T> T Min(T a, T b) { return a < b ? a : b; }
+
+	SPI_TypeDef *m_spi;
+	f1ll::DmaHelper	m_dma;
 
 	TaskHandle_t	m_task_handle = nullptr;
 
@@ -62,8 +66,10 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-template <uint16_t pixels, uint8_t spi_pixels> WS28xxStrip<pixels, spi_pixels>::WS28xxStrip(pixel_t defcolor)
-: m_main_mutex(xSemaphoreCreateBinaryStatic(&m_main_mutex_buffer))
+template <uint16_t pixels, uint8_t spi_pixels> WS28xxStrip<pixels, spi_pixels>::WS28xxStrip(SPI_TypeDef *spi, DMA_TypeDef *dma, uint32_t channel, pixel_t defcolor)
+: m_spi(spi)
+, m_dma(dma, channel)
+, m_main_mutex(xSemaphoreCreateBinaryStatic(&m_main_mutex_buffer))
 {
 	for(uint16_t p=0; p < pixels; ++p)
 		m_pixels[p] = defcolor;
@@ -78,31 +84,31 @@ template <uint16_t pixels, uint8_t spi_pixels> pixel_t& WS28xxStrip<pixels, spi_
 }
 
 //////////////////////////////////////////////////////////////////////////////
-template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixels>::SpiDmaIsr()
+template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixels>::HandleSpiDmaIrq()
 {
 	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 
 	BaseType_t woken;
 
-	if(LL_DMA_IsActiveFlag_TE3(DMA1)) {
-		LL_DMA_ClearFlag_TE3(DMA1);
+	if(*m_dma.GetIsReg() & m_dma.GetTeMask()) {
+		*m_dma.GetIfcReg() = m_dma.GetTeMask();
 	}
-	else if(LL_DMA_IsActiveFlag_HT3(DMA1) || LL_DMA_IsActiveFlag_TC3(DMA1))
+	else if(*m_dma.GetIsReg() & m_dma.GetHtMask() || *m_dma.GetIsReg() & m_dma.GetTcMask())
 	{
-		if(LL_DMA_IsActiveFlag_HT3(DMA1))
+		if(*m_dma.GetIsReg() & m_dma.GetHtMask())
 		{
-			LL_DMA_ClearFlag_HT3(DMA1);
+			*m_dma.GetIfcReg() = m_dma.GetHtMask();
 			m_buffer_in_transmit = 1;
 			if(m_endframe)
-				LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_3, LL_DMA_MODE_NORMAL);
+				LL_DMA_SetMode(m_dma.GetDma(), m_dma.GetChannel(), LL_DMA_MODE_NORMAL);
 		}
-		else if(LL_DMA_IsActiveFlag_TC3(DMA1))
+		else if(*m_dma.GetIsReg() & m_dma.GetTcMask())
 		{
-			LL_DMA_ClearFlag_TC3(DMA1);
+			*m_dma.GetIfcReg() = m_dma.GetTcMask();
 			m_buffer_in_transmit = 0;
 			if(m_endframe && m_endprev) {
-				LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
-				LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_3, LL_DMA_MODE_CIRCULAR);
+				LL_DMA_DisableChannel(m_dma.GetDma(), m_dma.GetChannel());
+				LL_DMA_SetMode(m_dma.GetDma(), m_dma.GetChannel(), LL_DMA_MODE_CIRCULAR);
 				woken = pdFALSE;
 				xSemaphoreGiveFromISR(m_main_mutex, &woken);
 				portYIELD_FROM_ISR(woken);
@@ -167,12 +173,12 @@ template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixe
 
 	m_buffer_in_transmit = 0;
 
-	LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3, (uint32_t)m_spi_buffer, LL_SPI_DMA_GetRegAddr(SPI1), LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
-	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, sizeof(m_spi_buffer));
-	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
-	LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_3);
-	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_3);
-	LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_3);
+	LL_DMA_ConfigAddresses(m_dma.GetDma(), m_dma.GetChannel(), (uint32_t)m_spi_buffer, LL_SPI_DMA_GetRegAddr(m_spi), LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
+	LL_DMA_SetDataLength(m_dma.GetDma(), m_dma.GetChannel(), sizeof(m_spi_buffer));
+	LL_DMA_EnableChannel(m_dma.GetDma(), m_dma.GetChannel());
+	LL_DMA_EnableIT_HT(m_dma.GetDma(), m_dma.GetChannel());
+	LL_DMA_EnableIT_TC(m_dma.GetDma(), m_dma.GetChannel());
+	LL_DMA_EnableIT_TE(m_dma.GetDma(), m_dma.GetChannel());
 }
 
 //////////////////////////////////////////////////////////////////////////////

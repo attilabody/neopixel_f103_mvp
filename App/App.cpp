@@ -23,7 +23,7 @@
 #include "WS28xxStrip.h"
 #include "Sparkle.h"
 
-WS28xxStrip<NUMPIXELS, SPIBUFFER_PIXELS>	g_strip( { DEFAULT_COLOR } );
+WS28xxStrip<NUMPIXELS, SPIBUFFER_PIXELS>	g_strip( SPI1, DMA1, LL_DMA_CHANNEL_3, { DEFAULT_COLOR } );
 Sparkle	g_sparkles[NUMSPARKLES];
 
 /* Definitions for StripFeeder */
@@ -68,7 +68,7 @@ void StartSparkle( Sparkle &s )
 extern "C" void DMA1_Channel3_IRQHandler(void)
 {
 	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
-	g_strip.SpiDmaIsr();
+	g_strip.HandleSpiDmaIrq();
 	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 }
 
