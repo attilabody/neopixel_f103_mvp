@@ -23,7 +23,7 @@ struct pixel_t {
 	uint8_t b;
 };
 
-extern "C" void HandleSpiDmaIrq();
+extern "C" void DMA1_Channel3_IRQHandler(void);
 
 template <uint16_t pixels, uint8_t spi_pixels> class WS28xxStrip {
 public:
@@ -31,7 +31,7 @@ public:
 
 	pixel_t& operator[](int16_t index);
 
-	friend void HandleSpiDmaIrq();
+	friend void DMA1_Channel3_IRQHandler(void);
 	void Update();
 
 	static void RefillTaskEntry(void *param) { reinterpret_cast<WS28xxStrip<pixels, spi_pixels>*>(param)->RefillTask(); }
@@ -80,6 +80,8 @@ template <uint16_t pixels, uint8_t spi_pixels> pixel_t& WS28xxStrip<pixels, spi_
 //////////////////////////////////////////////////////////////////////////////
 template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixels>::SpiDmaIsr()
 {
+	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
+
 	BaseType_t woken;
 
 	if(LL_DMA_IsActiveFlag_TE3(DMA1)) {
@@ -112,6 +114,7 @@ template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixe
 		woken = pdFALSE;
 
 		if(m_task_handle) {
+			LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 			vTaskNotifyGiveFromISR(m_task_handle, &woken);
 			portYIELD_FROM_ISR(woken);
 		}
@@ -127,17 +130,16 @@ template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixe
 	{
 		if( ulTaskNotifyTake(pdFALSE, pdMS_TO_TICKS(1000)) > 0)
 		{
+			LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 			m_endprev = m_endframe;
 
 			uint8_t convert_now = Min((uint8_t)(pixels - m_pixels_converted), spi_pixels);
 
 			if(convert_now)
 			{
-				LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 				Convert((uint8_t*)&m_pixels[m_pixels_converted],
 						m_spi_buffer[m_buffer_in_transmit ^ 1],
 						convert_now * sizeof(pixel_t));
-				LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 				m_pixels_converted += convert_now;
 			}
 
@@ -146,6 +148,7 @@ template <uint16_t pixels, uint8_t spi_pixels> void WS28xxStrip<pixels, spi_pixe
 						0, SPI_BUFFER_SIZE - convert_now * SPI_PIXEL_SIZE);
 				m_endframe = true;
 			}
+			LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_13);
 		}
 	}
 }

@@ -65,9 +65,11 @@ void StartSparkle( Sparkle &s )
 #endif
 }
 
-extern "C" void HandleSpiDmaIrq()
+extern "C" void DMA1_Channel3_IRQHandler(void)
 {
+	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 	g_strip.SpiDmaIsr();
+	LL_GPIO_TogglePin(GPIOA, LL_GPIO_PIN_0);
 }
 
 void TimerCallback(TimerHandle_t th)
