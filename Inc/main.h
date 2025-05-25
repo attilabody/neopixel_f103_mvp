@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+
 #include "stm32f1xx_ll_dma.h"
 #include "stm32f1xx_ll_rcc.h"
 #include "stm32f1xx_ll_bus.h"
@@ -38,7 +39,6 @@ extern "C" {
 #include "stm32f1xx_ll_pwr.h"
 #include "stm32f1xx_ll_spi.h"
 #include "stm32f1xx_ll_usart.h"
-#include "stm32f1xx.h"
 #include "stm32f1xx_ll_gpio.h"
 
 #if defined(USE_FULL_ASSERT)
@@ -86,6 +86,7 @@ void Error_Handler(void);
 #define NVIC_PRIORITYGROUP_4         ((uint32_t)0x00000003) /*!< 4 bits for pre-emption priority,
                                                                  0 bit  for subpriority */
 #endif
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -95,5 +96,3 @@ void Error_Handler(void);
 #endif
 
 #endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -155,4 +155,3 @@ __weak void App(void const * argument)
 
 /* USER CODE END Application */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
